@@ -23,5 +23,3 @@ crash.*.log
 terraform.rc
 
 # Custom additions
-docker-compose.yaml
-docker-compose.override.yml
