@@ -1,0 +1,5 @@
+# login to docker
+docker login --username terraform images.releases.hashicorp.com
+
+#get admin link
+docker exec -it $(docker ps -aq) /bin/bash -c 'echo https://${TFE_HOSTNAME}/admin/account/new?token=$(tfectl admin token)'

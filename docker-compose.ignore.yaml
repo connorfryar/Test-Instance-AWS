@@ -1,0 +1,50 @@
+# Caution: $ is a reserved character in docker compose files for variable interpolation and can be escaped by using $$.
+# https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/
+---
+name: terraform-enterprise
+services:
+  tfe:
+    image: images.releases.hashicorp.com/hashicorp/terraform-enterprise:1.1.2
+    environment:
+      TFE_LICENSE: ""
+      TFE_HOSTNAME: ""
+      TFE_ENCRYPTION_PASSWORD: ''
+      TFE_OPERATIONAL_MODE: "disk"
+      TFE_DISK_CACHE_VOLUME_NAME: "${COMPOSE_PROJECT_NAME}_terraform-enterprise-cache"
+      TFE_TLS_CERT_FILE: "/etc/ssl/private/terraform-enterprise/cert.pem"
+      TFE_TLS_KEY_FILE: "/etc/ssl/private/terraform-enterprise/key.pem"
+      TFE_TLS_CA_BUNDLE_FILE: "/etc/ssl/private/terraform-enterprise/bundle.pem"
+      TFE_METRICS_ENABLE: 'true'
+      TFE_ADMIN_HTTPS_PORT: 8443
+      TFE_ADMIN_CONSOLE_DISABLED: false
+      TFE_USAGE_REPORTING_DISABLED: "true"
+#      TFE_IACT_SUBNETS: "<IACT subnet, eg. 10.0.0.0/8,192.168.0.0/24"
+      
+    cap_add:
+      - IPC_LOCK
+    read_only: true
+    tmpfs:
+      - /tmp:mode=01777
+      - /run
+      - /var/log/terraform-enterprise
+    ports:
+      - "80:80"
+      - "443:443"
+      - "9090:9090"
+      - "9091:9091"
+      - "8443:8443"
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /run/docker.sock
+      - type: bind
+        source: ./certs
+        target: /etc/ssl/private/terraform-enterprise
+      - type: bind
+        source: ./data
+        target: /var/lib/terraform-enterprise
+      - type: volume
+        source: terraform-enterprise-cache
+        target: /var/cache/tfe-task-worker/terraform
+volumes:
+  terraform-enterprise-cache:

@@ -1,0 +1,27 @@
+# Local object databases and binaries
+.terraform/
+terraform-tests/
+Resource\ notes/
+
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+*.terraform.lock.hcl
+
+# Sensitive variables and environment files
+*.tfvars
+*.tfvars.json
+.env
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# Custom additions
+docker-compose.yaml
+docker-compose.override.yml
