@@ -12,7 +12,7 @@ chmod 755 get-docker.sh
 
 ## Variables for certbot
 # update if you change the vars in var.tf
-DOMAIN=""
+DOMAIN="docker.connor-fryar.sbx.hashidemos.io"
 EMAIL="connor.fryar@ibm.com" 
 KEYTYPE="rsa"               
 

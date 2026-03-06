@@ -1,5 +1,5 @@
 output "AMI_Data" {
-  value = data.aws_ami.Ubuntu
+  value = data.aws_ami.Ubuntu["amd64"]
 }
 
 output "Instance_data" {

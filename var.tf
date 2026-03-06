@@ -2,7 +2,7 @@
 variable "InstanceName" {
   type        = string
   description = "Name of the test bench instance"
-  default = "depricated"
+  default     = "depricated"
 }
 
 variable "InstanceType" {
@@ -16,6 +16,7 @@ variable "InstanceType" {
 variable "EBSSize" {
   type        = number
   description = "The size of the Storage Volume. Must be less that 100GiB"
+  default     = 50
 
   validation {
     condition     = var.EBSSize < 100

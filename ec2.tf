@@ -2,18 +2,17 @@
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami
 # example at ./Resource \notes/aws_ami_example.txt
 data "aws_ami" "Ubuntu" {
-  most_recent = true
-
+  for_each = toset(["amd64", "arm64"])
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+    values = [format("hc-base-ubuntu-2404-%s-*", each.value)]
   }
-
   filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
+    name   = "state"
+    values = ["available"]
   }
-  owners = ["099720109477"] # Canonical
+  most_recent = true
+  owners      = ["888995627335"] # ami-prod account
 }
 
 ###################### Instance Definition ######################
@@ -21,7 +20,7 @@ data "aws_ami" "Ubuntu" {
 # example at /Resource \notes/aws_instance_example.txt
 resource "aws_instance" "TestInstanceInstance" {
   subnet_id                   = aws_subnet.mainSubnet.id
-  ami                         = data.aws_ami.Ubuntu.id
+  ami                         = data.aws_ami.Ubuntu["amd64"].id
   instance_type               = var.InstanceType
   security_groups             = [aws_security_group.TestInstanceSG.id]
   associate_public_ip_address = true
