@@ -26,6 +26,8 @@ resource "aws_instance" "TestInstanceInstance" {
   associate_public_ip_address = true
   availability_zone           = "us-east-1a"
 
+  key_name = aws_key_pair.deployer.key_name
+
   user_data_replace_on_change = true
   user_data                   = file("${path.module}/userdata.sh")
   root_block_device {
@@ -47,3 +49,7 @@ data "aws_instance" "TestInstanceInstanceData" {
   instance_id = aws_instance.TestInstanceInstance.id
 }
 
+resource "aws_key_pair" "deployer" {
+  key_name   = "deployer-key"
+  public_key = var.public_key
+}

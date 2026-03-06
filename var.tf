@@ -57,3 +57,7 @@ variable "availability_zone" {
   default     = "us-east-1a"
 }
 
+variable "public_key" {
+  type = string
+  description = "public key that will be attached to instance on startup"
+}
