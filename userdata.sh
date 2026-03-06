@@ -16,6 +16,10 @@ DOMAIN="docker.connor-fryar.sbx.hashidemos.io"
 EMAIL="connor.fryar@ibm.com" 
 KEYTYPE="rsa"               
 
+if ! command -v snap >/dev/null 2>&1; then
+  sudo apt install snapd -y
+fi
+
 # 1) Ensure certbot is available
 if ! command -v certbot >/dev/null 2>&1; then
   sudo snap install --classic certbot
