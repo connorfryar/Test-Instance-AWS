@@ -37,9 +37,9 @@ if [[ -n $DOMAIN ]]; then
   # Define target destination
   TARGET_DIR="/opt/$DATE"
   # make working directory
-  sudo mkdir -p /opt/$TARGET_DIR
+  sudo mkdir -p $TARGET_DIR
   # make certs directory
-  sudo mkdir -p /opt/$TARGET_DIR/certs
+  sudo mkdir -p $TARGET_DIR/certs
   # move certificates
   sudo cp "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" "$TARGET_DIR/certs/bundle.pem"
   sudo cp "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" "$TARGET_DIR/certs/cert.pem"
