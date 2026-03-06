@@ -15,6 +15,7 @@ chmod 755 get-docker.sh
 DOMAIN="docker.connor-fryar.sbx.hashidemos.io"
 EMAIL="connor.fryar@ibm.com" 
 KEYTYPE="rsa"               
+DATE=$(date +"%d%m%y")
 
 if ! command -v snap >/dev/null 2>&1; then
   sudo apt install snapd -y
@@ -34,7 +35,7 @@ if [[ -n $DOMAIN ]]; then
     --non-interactive --agree-tos -m "${EMAIL}" \
 
   # Define target destination
-  TARGET_DIR="/opt/$TARGET_DIR"
+  TARGET_DIR="/opt/$DATE"
   # make working directory
   sudo mkdir -p /opt/$TARGET_DIR
   # make certs directory
