@@ -58,6 +58,6 @@ variable "availability_zone" {
 }
 
 variable "public_key" {
-  type = string
+  type        = string
   description = "public key that will be attached to instance on startup"
 }

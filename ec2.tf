@@ -40,6 +40,10 @@ resource "aws_instance" "TestInstanceInstance" {
     # Possible to do ebs attachment here
     # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#tag-guide
   }
+  lifecycle {
+    ignore_changes = all
+  }
+
 }
 
 ######################### DATA LOOKUPS #########################

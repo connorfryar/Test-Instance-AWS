@@ -45,6 +45,21 @@ resource "aws_vpc_security_group_ingress_rule" "allow80" {
   to_port           = 80
 }
 
+resource "aws_vpc_security_group_ingress_rule" "allow8443" {
+  security_group_id = aws_security_group.TestInstanceSG.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 8443
+  ip_protocol       = "tcp"
+  to_port           = 8443
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow9091" {
+  security_group_id = aws_security_group.TestInstanceSG.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 9091
+  ip_protocol       = "tcp"
+  to_port           = 9091
+}
 
 ###################### Egress Definition ######################
 ###
