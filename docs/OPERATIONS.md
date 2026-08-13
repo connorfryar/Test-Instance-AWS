@@ -73,7 +73,6 @@ subdomain  = "docker"
 public_key = file("~/.ssh/id_rsa.pub")
 
 # Optional variables (showing defaults; uncomment to override)
-# InstanceName         = "deprecated"
 # InstanceType         = "t3.medium"
 # EBSSize              = 50
 # EBSType              = "gp3"
@@ -367,13 +366,6 @@ Complete reference of all input variables:
 
 ### EC2 Instance Variables
 
-#### `InstanceName`
-- **Type:** `string`
-- **Default:** `"deprecated"`
-- **Required:** No
-- **Description:** Display name for EC2 instance
-- **Example:** `InstanceName = "terraform-enterprise-dev"`
-
 #### `InstanceType`
 - **Type:** `string`
 - **Default:** `"t3.medium"`
@@ -510,12 +502,6 @@ cat ~/.ssh/id_rsa.pub
 
 ### Primary Outputs
 
-#### `domain_name`
-- **Description:** Instance name tag
-- **Value:** Variable `InstanceName` (default: "deprecated")
-- **Use:** For identifying instance in UI
-- **Terraform Reference:** `output.domain_name`
-
 #### `public_ip_address`
 - **Description:** EC2 instance public IP address
 - **Value:** `aws_instance.TestInstanceInstance.public_ip`
@@ -571,7 +557,6 @@ cat ~/.ssh/id_rsa.pub
 terraform output
 
 # Show specific output
-terraform output -json domain_name
 terraform output -raw public_ip_address
 
 # Access in shell
@@ -769,7 +754,6 @@ terraform destroy -auto-approve && terraform apply -auto-approve
 
 ### EC2 Instance Tags Not Updated
 
-**Symptom:** Changing `InstanceName` variable doesn't update EC2 tags
 
 **Reason:** `lifecycle { ignore_changes = all }` in ec2.tf prevents tag updates
 

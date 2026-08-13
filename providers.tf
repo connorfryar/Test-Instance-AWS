@@ -9,6 +9,7 @@ terraform {
       version = "3.7.2"
     }
   }
+  required_version = "~> 1.14.6"
 }
 
 # Configure the AWS Provider
@@ -16,5 +17,6 @@ provider "aws" {
   region = "us-east-1"
   # availability_zone = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
+
 provider "random" {
 }

@@ -187,7 +187,6 @@ See [`docs/OPERATIONS.md`](docs/OPERATIONS.md) for recommendations on state mana
 
 | Variable | Type | Default | Required | Purpose |
 |----------|------|---------|----------|---------|
-| **InstanceName** | string | "deprecated" | No | EC2 instance name tag |
 | **InstanceType** | string | "t3.medium" | No | EC2 instance type (2 vCPU, 8 GiB RAM recommended) |
 | **EBSSize** | number | 50 | No | EBS volume size in GiB (must be < 100) |
 | **EBSType** | string | "gp3" | No | EBS volume type (gp2, gp3, io1, io2) |
@@ -210,7 +209,6 @@ See [`docs/OPERATIONS.md`](docs/OPERATIONS.md) for examples and detailed variabl
 
 | Output | Source | Purpose |
 |--------|--------|---------|
-| **domain_name** | `var.InstanceName` | Instance name for identification |
 | **public_ip_address** | `aws_instance.TestInstanceInstance.public_ip` | Public IP for SSH and web access |
 | **AMI_Data** | `data.aws_ami.Ubuntu["amd64"]` | AMI metadata (ID, architecture, etc.) |
 | **Instance_data** | `data.aws_instance.TestInstanceInstanceData` | Instance metadata after creation |

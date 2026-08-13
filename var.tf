@@ -1,9 +1,4 @@
 ###################### EC2 Instance ######################
-variable "InstanceName" {
-  type        = string
-  description = "Name of the test bench instance"
-  default     = "depricated"
-}
 
 variable "InstanceType" {
   type        = string
@@ -30,7 +25,8 @@ variable "EBSType" {
   default     = "gp3"
 }
 
-# Route53 variables
+###################### Route53 ######################
+
 variable "subdomain" {
   type        = string
   description = "Subdomain name for Route53"
@@ -51,11 +47,15 @@ locals {
   domain_name = "${var.subdomain}.${var.yourname}.${var.domain}"
 }
 
+###################### VPC ######################
+
 variable "availability_zone" {
   type        = string
   description = "availability zone"
   default     = "us-east-1a"
 }
+
+###################### SSH ######################
 
 variable "public_key" {
   type        = string
