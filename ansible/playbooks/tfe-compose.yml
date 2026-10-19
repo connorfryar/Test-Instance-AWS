@@ -1,0 +1,124 @@
+---
+# Change the running TFE's image version and/or the size of its /tmp tmpfs.
+#
+#   ansible-playbook playbooks/tfe-compose.yml -e tfe_version=1.2.1 -e tfe_fresh_data=true
+#   ansible-playbook playbooks/tfe-compose.yml -e tfe_tmp_size=200m
+#   ansible-playbook playbooks/tfe-compose.yml            # restore default /tmp (half of RAM)
+#
+# tfe_fresh_data=true moves the data directory aside (data.bak-<timestamp>) and starts
+# TFE on an empty one. Required for a downgrade, which TFE does not support in place.
+# After a fresh start the initial admin link is written to /root/tfe-iact-url.txt (0600).
+- name: Configure TFE docker compose
+  hosts: tfe
+  vars:
+    tfe_version: ""
+    tfe_tmp_size: ""
+    tfe_fresh_data: false
+  tasks:
+    - name: Find the compose project directory from the running container
+      ansible.builtin.command: >-
+        docker inspect {{ tfe_container }}
+        --format '{{ "{{" }} index .Config.Labels "com.docker.compose.project.working_dir" {{ "}}" }}'
+      register: compose_dir_out
+      changed_when: false
+
+    - name: Set compose paths
+      ansible.builtin.set_fact:
+        compose_dir: "{{ compose_dir_out.stdout | trim }}"
+        compose_file: "{{ compose_dir_out.stdout | trim }}/docker-compose.yaml"
+
+    - name: Read the current image
+      ansible.builtin.command: docker inspect {{ tfe_container }} --format '{{ "{{" }} .Config.Image {{ "}}" }}'
+      register: current_image
+      changed_when: false
+
+    - name: Show what will change
+      ansible.builtin.debug:
+        msg:
+          - "compose file: {{ compose_file }}"
+          - "image: {{ current_image.stdout }} -> {{ (tfe_image_repo ~ ':' ~ tfe_version) if tfe_version else 'unchanged' }}"
+          - "/tmp size: {{ tfe_tmp_size if tfe_tmp_size else 'default (half of RAM)' }}"
+          - "fresh data directory: {{ tfe_fresh_data | bool }}"
+
+    - name: Pull the new image before stopping anything
+      ansible.builtin.command: docker pull {{ tfe_image_repo }}:{{ tfe_version }}
+      when: tfe_version | length > 0
+      changed_when: false
+
+    - name: Set the image version
+      ansible.builtin.lineinfile:
+        path: "{{ compose_file }}"
+        regexp: '^(\s*)image: {{ tfe_image_repo | regex_escape }}:.*$'
+        line: '\1image: {{ tfe_image_repo }}:{{ tfe_version }}'
+        backrefs: true
+        backup: true
+      when: tfe_version | length > 0
+
+    - name: Set the /tmp tmpfs options
+      ansible.builtin.lineinfile:
+        path: "{{ compose_file }}"
+        regexp: '^(\s*)- /tmp:mode=01777.*$'
+        line: '\1- /tmp:mode=01777{{ ("," ~ "size=" ~ tfe_tmp_size) if tfe_tmp_size else "" }}'
+        backrefs: true
+        backup: true
+
+    - name: Stop TFE
+      ansible.builtin.command: docker compose down
+      args:
+        chdir: "{{ compose_dir }}"
+      when: tfe_fresh_data | bool
+
+    - name: Move the data directory aside
+      ansible.builtin.command: mv {{ compose_dir }}/data {{ compose_dir }}/data.bak-{{ ansible_date_time.epoch }}
+      when: tfe_fresh_data | bool
+
+    - name: Create an empty data directory
+      ansible.builtin.file:
+        path: "{{ compose_dir }}/data"
+        state: directory
+        owner: root
+        group: root
+        mode: "0775"
+
+    - name: Start TFE with the new settings
+      ansible.builtin.command: docker compose up -d
+      args:
+        chdir: "{{ compose_dir }}"
+      register: up
+      changed_when: "'Recreate' in up.stderr or 'Started' in up.stderr or 'Created' in up.stderr"
+
+    - name: Wait for TFE to report healthy
+      ansible.builtin.uri:
+        url: https://127.0.0.1/_health_check
+        validate_certs: false
+        status_code: 200
+      register: health
+      until: health.status == 200
+      retries: 60
+      delay: 15
+
+    - name: Report the running version and /tmp
+      ansible.builtin.shell: |
+        docker inspect {{ tfe_container }} --format '{{ "{{" }} .Config.Image {{ "}}" }}'
+        docker exec {{ tfe_container }} df -h /tmp | tail -1
+      register: result
+      changed_when: false
+
+    - name: Show result
+      ansible.builtin.debug:
+        var: result.stdout_lines
+
+    - name: Write the initial admin link (fresh data only)
+      ansible.builtin.shell: |
+        set -o pipefail
+        umask 077
+        docker exec {{ tfe_container }} sh -c 'echo "https://${TFE_HOSTNAME}/admin/account/new?token=$(tfectl admin token)"' > /root/tfe-iact-url.txt
+      args:
+        executable: /bin/bash
+      no_log: true
+      when: tfe_fresh_data | bool
+
+    - name: Where to find the admin link
+      ansible.builtin.debug:
+        msg: "Initial admin link: sudo cat /root/tfe-iact-url.txt on the host (valid for 60 minutes after startup)"
+      when: tfe_fresh_data | bool

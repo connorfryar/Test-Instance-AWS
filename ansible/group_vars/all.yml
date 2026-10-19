@@ -1,0 +1,6 @@
+---
+ansible_become: true
+
+# Container name from docker-compose.yaml
+tfe_container: tfe
+tfe_image_repo: images.releases.hashicorp.com/hashicorp/terraform-enterprise

@@ -1,0 +1,67 @@
+---
+# Run self-hosted tfc-agent containers against this host's TFE.
+#
+#   export TFC_AGENT_TOKEN=...   # agent pool token, e.g. a terraform output
+#   ansible-playbook playbooks/tfc-agent.yml -e tfc_agent_count=3
+#   ansible-playbook playbooks/tfc-agent.yml -e tfc_agent_state=absent
+#
+# The token is read from the controller's environment and passed to docker through
+# the environment, so it never appears on a command line or in output.
+- name: Manage tfc-agent containers
+  hosts: tfe
+  vars:
+    tfc_agent_image: hashicorp/tfc-agent
+    tfc_agent_version: "1.28.3"
+    tfc_agent_count: 3
+    tfc_agent_prefix: tfc-agent
+    tfc_agent_state: present
+    tfc_agent_token: "{{ lookup('ansible.builtin.env', 'TFC_AGENT_TOKEN') }}"
+  tasks:
+    - name: Require a token when starting agents
+      ansible.builtin.assert:
+        that: tfc_agent_token | length > 0
+        fail_msg: Set TFC_AGENT_TOKEN in the environment before running this playbook.
+      when: tfc_agent_state == 'present'
+
+    - name: Read the TFE hostname
+      ansible.builtin.command: docker exec {{ tfe_container }} printenv TFE_HOSTNAME
+      register: tfe_hostname
+      changed_when: false
+      when: tfc_agent_state == 'present'
+
+    - name: Pull the agent image
+      ansible.builtin.command: docker pull {{ tfc_agent_image }}:{{ tfc_agent_version }}
+      changed_when: false
+      when: tfc_agent_state == 'present'
+
+    - name: Find existing agent containers
+      ansible.builtin.command: docker ps -a --filter name=^{{ tfc_agent_prefix }}- --format '{{ "{{" }} .Names {{ "}}" }}'
+      register: existing
+      changed_when: false
+
+    - name: Remove existing agent containers
+      ansible.builtin.command: docker rm -f {{ item }}
+      loop: "{{ existing.stdout_lines }}"
+
+    - name: Start agent containers
+      ansible.builtin.command: >-
+        docker run -d --restart unless-stopped
+        --name {{ tfc_agent_prefix }}-{{ '%02d' | format(item) }}
+        -e TFC_AGENT_TOKEN
+        -e TFC_ADDRESS=https://{{ tfe_hostname.stdout | trim }}
+        -e TFC_AGENT_NAME={{ tfc_agent_prefix }}-{{ '%02d' | format(item) }}
+        {{ tfc_agent_image }}:{{ tfc_agent_version }}
+      environment:
+        TFC_AGENT_TOKEN: "{{ tfc_agent_token }}"
+      loop: "{{ range(1, (tfc_agent_count | int) + 1) | list }}"
+      no_log: true
+      when: tfc_agent_state == 'present'
+
+    - name: List agent containers
+      ansible.builtin.command: docker ps -a --filter name=^{{ tfc_agent_prefix }}- --format '{{ "{{" }} .Names {{ "}}" }} {{ "{{" }} .Image {{ "}}" }} {{ "{{" }} .Status {{ "}}" }}'
+      register: agents
+      changed_when: false
+
+    - name: Show agents
+      ansible.builtin.debug:
+        var: agents.stdout_lines
